@@ -1,22 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
-import { Search, User, Wallet, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
 // import { useTheme } from "next-themes";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
-import { useSession } from "next-auth/react";
 import { LoginDialog } from "@/components/dialogs/login-dialog";
 import Logo from "@/components/Logo/logo";
+import { usePrivy, useWallets } from "@privy-io/react-auth";
+import { useSession } from "next-auth/react";
+import Controls from "./controls";
+import { Skeleton } from "../skeleton";
 // import { useAuth } from "@/components/auth-provider";
 // import { LoginDialog } from "@/components/login-dialog";
 
@@ -25,6 +20,8 @@ export function Header() {
   // const { user, logout } = useAuth();
   const { data: session } = useSession();
   const [showLogin, setShowLogin] = useState(false);
+  const { ready, login, authenticated } = usePrivy();
+  // const { wallets,  } = useWallets();
 
   return (
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -59,47 +56,14 @@ export function Header() {
               <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
             </Button> */}
 
-            {session?.user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="flex items-center space-x-2"
-                  >
-                    <User className="h-4 w-4" />
-                    {/* <span className="hidden md:inline">{user.email}</span> */}
-                    <Badge variant="secondary" className="ml-2">
-                      <Wallet className="h-3 w-3 mr-1" />$
-                      {/* {user.balance.toFixed(2)} */}
-                    </Badge>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuItem asChild>
-                    <Link href="/portfolio">Portfolio</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/wallet">Wallet</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  {session?.user?.role === "ADMIN" && (
-                    <>
-                      <DropdownMenuItem asChild>
-                        <Link href="/admin">Admin Panel</Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                    </>
-                  )}
-                  {/* <DropdownMenuItem onClick={logout}>Sign Out</DropdownMenuItem> */}
-                </DropdownMenuContent>
-              </DropdownMenu>
+            {ready ? (
+              authenticated ? (
+                <Controls />
+              ) : (
+                <Button onClick={login}>Connect Wallet</Button>
+              )
             ) : (
-              <div className="flex items-center space-x-2">
-                <Button variant="ghost" onClick={() => setShowLogin(true)}>
-                  Log In
-                </Button>
-                <Button onClick={() => setShowLogin(true)}>Sign Up</Button>
-              </div>
+              <Skeleton className="h-8 w-24" />
             )}
           </div>
         </div>
