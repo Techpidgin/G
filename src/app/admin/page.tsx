@@ -42,10 +42,10 @@ export default function AdminDashboard() {
             <TrendingUp className="h-4 w-4" />
             <span className="hidden sm:inline">Markets</span>
           </TabsTrigger>
-          <TabsTrigger value="users" className="flex items-center space-x-2">
+          {/* <TabsTrigger value="users" className="flex items-center space-x-2">
             <Users className="h-4 w-4" />
             <span className="hidden sm:inline">Users</span>
-          </TabsTrigger>
+          </TabsTrigger> */}
           <TabsTrigger
             value="analytics"
             className="flex items-center space-x-2"
@@ -60,8 +60,8 @@ export default function AdminDashboard() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
                   Total Users
@@ -74,7 +74,7 @@ export default function AdminDashboard() {
                   +12% from last month
                 </p>
               </CardContent>
-            </Card>
+            </Card> */}
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -106,7 +106,7 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
 
-            <Card>
+            {/* <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
                   Daily Active Users
@@ -119,7 +119,7 @@ export default function AdminDashboard() {
                   +5% from yesterday
                 </p>
               </CardContent>
-            </Card>
+            </Card> */}
           </div>
 
           <Card>

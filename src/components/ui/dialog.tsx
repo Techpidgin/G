@@ -66,7 +66,7 @@ function DialogContent({
         <DialogPrimitive.Content
           data-slot="dialog-content"
           className={cn(
-            "bg-background fixed bottom-0 left-0 right-0 z-50 flex flex-col rounded-t-[10px] border-t p-6"
+            "bg-background fixed bottom-0 left-0 right-0 z-50 flex flex-col rounded-t-[10px] border-t p-6 max-h-[95vh]"
           )}
         >
           <div className="scrollbar-hide flex-1 overflow-y-auto rounded-t-[10px] bg-inherit">
@@ -125,9 +125,9 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
 function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
-      data-slot="dialog-footer"
+      data-slot="dialog-footer absolute"
       className={cn(
-        "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
+        "flex flex-row-reverse mt-4 md:flex-col-reverse  gap-2 sm:flex-row sm:justify-end",
         className
       )}
       {...props}
