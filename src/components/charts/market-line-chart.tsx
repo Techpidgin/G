@@ -18,11 +18,11 @@ const chartData = [
 ];
 const chartConfig = {
   desktop: {
-    label: "Desktop",
+    label: "Yes",
     color: "var(--chart-1)",
   },
   mobile: {
-    label: "Mobile",
+    label: "No",
     color: "var(--chart-2)",
   },
 } satisfies ChartConfig;

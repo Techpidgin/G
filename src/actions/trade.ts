@@ -7,11 +7,13 @@ export async function placeTrade({
   marketId,
   outcome, // "yes" or "no"
   amount,
+  shares,
 }: {
   userId: string;
   marketId: string;
   outcome: "yes" | "no";
   amount: number;
+  shares: number;
 }) {
   // 1. Create the trade
   await database.trade.create({
@@ -19,6 +21,8 @@ export async function placeTrade({
       userId,
       marketId,
       amount,
+      shares,
+      type: outcome === "yes" ? "BUY" : "SELL",
       //   outcome,
     },
   });
