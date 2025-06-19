@@ -1,0 +1,17 @@
+model Trade {
+    id        String    @id @default(auto()) @map("_id") @db.ObjectId
+    userId    String    @db.ObjectId
+    marketId  String    @db.ObjectId
+    shares    Float
+    amount    Float
+    type      TradeType
+    timestamp DateTime  @default(now())
+
+    user   User   @relation(fields: [userId], references: [id])
+    market Market @relation(fields: [marketId], references: [id])
+}
+
+enum TradeType {
+    BUY
+    SELL
+}

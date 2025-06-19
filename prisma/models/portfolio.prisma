@@ -1,0 +1,15 @@
+model Portfolio {
+    id String @id @default(auto()) @map("_id") @db.ObjectId
+
+    shares   Float
+    avgPrice Float
+
+    userId      String @db.ObjectId
+    subMarketId String @db.ObjectId
+    user        User   @relation(fields: [userId], references: [id])
+
+    subMarket Market @relation(fields: [subMarketId], references: [id])
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}

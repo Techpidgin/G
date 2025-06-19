@@ -1,6 +1,6 @@
+import { Header } from "@/components/ui/layouts/header";
 import React from "react";
 import PersistAuth from "./persist-auth";
-import { Header } from "@/components/ui/layouts/header";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   return (

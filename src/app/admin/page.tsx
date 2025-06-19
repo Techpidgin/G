@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MarketManager } from "@/components/admin/market-manager";
+import { NewsManager } from "@/components/admin/news-manager";
 import {
   Card,
   CardContent,
@@ -9,23 +9,21 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { NewsManager } from "@/components/admin/news-manager";
-import { MarketManager } from "@/components/admin/market-manager";
-// import { UserManager } from "@/components/admin/user-manager"
-// import { AnalyticsDashboard } from "@/components/admin/analytics-dashboard"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState } from "react";
+
+import EmptyStateCard from "@/components/empty-state-card";
 import {
-  Users,
-  TrendingUp,
-  DollarSign,
   Activity,
-  Newspaper,
   BarChart3,
+  DollarSign,
+  Newspaper,
   Settings,
+  TrendingUp,
 } from "lucide-react";
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
-
   return (
     <div className="container mx-auto px-4 py-6">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -42,10 +40,7 @@ export default function AdminDashboard() {
             <TrendingUp className="h-4 w-4" />
             <span className="hidden sm:inline">Markets</span>
           </TabsTrigger>
-          {/* <TabsTrigger value="users" className="flex items-center space-x-2">
-            <Users className="h-4 w-4" />
-            <span className="hidden sm:inline">Users</span>
-          </TabsTrigger> */}
+
           <TabsTrigger
             value="analytics"
             className="flex items-center space-x-2"
@@ -61,21 +56,6 @@ export default function AdminDashboard() {
 
         <TabsContent value="overview" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Total Users
-                </CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">12,543</div>
-                <p className="text-xs text-muted-foreground">
-                  +12% from last month
-                </p>
-              </CardContent>
-            </Card> */}
-
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
@@ -122,7 +102,7 @@ export default function AdminDashboard() {
             </Card> */}
           </div>
 
-          <Card>
+          {/* <Card>
             <CardHeader>
               <CardTitle>Recent Activity</CardTitle>
               <CardDescription>
@@ -160,7 +140,12 @@ export default function AdminDashboard() {
                 </div>
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
+          <EmptyStateCard
+            icon={Activity}
+            title="No Activity Yet"
+            description="Once users start trading and interacting with your platform, you'll see recent activity and updates here."
+          />
         </TabsContent>
 
         <TabsContent value="news">

@@ -39,7 +39,9 @@ import {
   Play,
   CheckCircle,
   XCircle,
+  TrendingUp,
 } from "lucide-react";
+import EmptyStateCard from "../empty-state-card";
 
 const mockMarkets = [
   {
@@ -151,7 +153,18 @@ export function MarketManager() {
         </CardContent>
       </Card>
 
-      <Card>
+      <EmptyStateCard
+        icon={TrendingUp}
+        title="No Markets Created Yet"
+        description="Markets are created from news posts. Start by creating news posts in the News tab, then convert them into tradable prediction markets."
+        actionLabel="Go to News Management"
+        onAction={() => {
+          // In a real app, this would navigate to the news tab
+          console.log("Navigate to news tab");
+        }}
+      />
+
+      {/* <Card>
         <CardHeader>
           <CardTitle>Markets</CardTitle>
           <CardDescription>
@@ -231,7 +244,7 @@ export function MarketManager() {
             </TableBody>
           </Table>
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   );
 }

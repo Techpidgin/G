@@ -1,0 +1,18 @@
+model Market {
+    id         String      @id @default(auto()) @map("_id") @db.ObjectId
+    title      String
+    question   String?
+    price      Float       @default(0.5) // Starting market price (0.5 = 50/50)
+    newsId     String      @db.ObjectId
+    outcomes   String[]
+    trades     Trade[] // Users can buy/sell positions
+    portfolios Portfolio[] // User holdings
+    isResolved Boolean     @default(false)
+    isWinning  Boolean? // Mark as winning submarket when resolved
+    yesVolume  Float       @default(0)
+    noVolume   Float       @default(0)
+    createdAt  DateTime    @default(now())
+    updatedAt  DateTime    @updatedAt
+
+    news News @relation(fields: [newsId], references: [id])
+}

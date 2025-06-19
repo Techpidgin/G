@@ -1,5 +1,4 @@
-"use client";
-
+import { listNews } from "@/actions/news";
 import { MarketCard } from "@/components/markets/market-card";
 
 // Mock data - in real app, this would come from API
@@ -50,11 +49,12 @@ const mockMarkets = [
   },
 ];
 
-export function MarketGrid() {
+export async function MarketGrid() {
+  const newsList = await listNews();
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-      {mockMarkets.map((market) => (
-        <MarketCard key={market.id} market={market} />
+      {newsList.map((news) => (
+        <MarketCard key={news.id} news={news} />
       ))}
     </div>
   );

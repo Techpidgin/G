@@ -1,0 +1,23 @@
+model News {
+    id             String    @id @default(auto()) @map("_id") @db.ObjectId
+    title          String
+    slug           String    @unique
+    description    String?
+    image          String?
+    icon           String?
+    startDate      DateTime  @default(now())
+    endDate        DateTime
+    isActive       Boolean   @default(true)
+    isClosed       Boolean   @default(false)
+    isRestricted   Boolean   @default(false)
+    resolutionDate DateTime?
+    tags           String[]
+    volume         Float     @default(0)
+    liquidity      Float     @default(0)
+    competitive    Float     @default(0)
+    negativeRisk   Boolean   @default(true)
+    orderbook      Boolean   @default(true)
+    markets        Market[]
+    createdAt      DateTime  @default(now())
+    updatedAt      DateTime  @updatedAt
+}
