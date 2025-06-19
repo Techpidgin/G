@@ -2,11 +2,11 @@
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Market } from "@prisma/client";
-import { Label } from "@radix-ui/react-select";
 import { Input } from "../ui/input";
 import { getMarketPrices } from "@/helpers/get-market-price";
 import { formatCents } from "@/helpers/format-cents";
 import { Button } from "../ui/button";
+import { Label } from "../ui/label";
 
 const TradingPanel = ({ selectedMarket }: { selectedMarket: Market }) => {
   const [selectedOutcome, setSelectedOutcome] = useState("yes");
@@ -30,7 +30,7 @@ const TradingPanel = ({ selectedMarket }: { selectedMarket: Market }) => {
 
       <TabsContent value="yes" className="space-y-4">
         <div className="space-y-2">
-          {/* <Label>Amount ($)</Label> */}
+          <Label htmlFor="yes-amount">Amount ($)</Label>
           <Input
             id="yes-amount"
             type="number"
@@ -50,7 +50,7 @@ const TradingPanel = ({ selectedMarket }: { selectedMarket: Market }) => {
 
       <TabsContent value="no" className="space-y-4">
         <div className="space-y-2">
-          {/* <Label>Amount ($)</Label> */}
+          <Label htmlFor="no-amount">Amount ($)</Label>
           <Input
             id="no-amount"
             type="number"

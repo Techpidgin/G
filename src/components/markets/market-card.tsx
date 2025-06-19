@@ -35,13 +35,13 @@ export function MarketCard({ news }: MarketCardProps) {
             className="rounded-lg object-cover"
           />
           <div className="flex-1 min-w-0">
-            {news.tags.slice(0, 3).map((tag) => (
-              <Badge variant="secondary" className="mb-2">
+            {news.tags.slice(0, 3).map((tag, index) => (
+              <Badge variant="secondary" key={index} className="mb-2">
                 {tag}
               </Badge>
             ))}
             <Link href={`/event/${news.slug}`}>
-              <h3 className="font-semibold text-sm leading-tight hover:text-primary transition-colors">
+              <h3 className="font-semibold text-sm leading-tight hover:text-primary transition-colors hover:underline">
                 {news.title}
               </h3>
             </Link>

@@ -4,6 +4,19 @@ import { database } from "@/lib/database";
 import { newsFormSchema } from "@/schemas/news";
 import * as z from "zod";
 
+const mockTags = [
+  { id: "2", label: "Politics", slug: "politics" },
+  { id: "180", label: "Israel", slug: "israel" },
+  { id: "100265", label: "Geopolitics", slug: "geopolitics" },
+  { id: "61", label: "Gaza", slug: "gaza" },
+  { id: "101970", label: "World", slug: "world" },
+  { id: "366", label: "World Affairs", slug: "world-affairs" },
+  { id: "3", label: "Sports", slug: "sports" },
+  { id: "4", label: "Tech", slug: "tech" },
+  { id: "5", label: "Economy", slug: "economy" },
+  { id: "6", label: "Crypto", slug: "crypto" },
+];
+
 export async function createMarket(data: z.infer<typeof newsFormSchema>) {
   try {
     const result = newsFormSchema.safeParse(data);
@@ -53,7 +66,7 @@ export async function createMarket(data: z.infer<typeof newsFormSchema>) {
                   // shares: 0,
                 },
         },
-        tags,
+        tags: mockTags.map((tag) => tag.label),
         // tags: {
         //   connect: parsed.tagIds.map((id) => ({ id })),
         // },
