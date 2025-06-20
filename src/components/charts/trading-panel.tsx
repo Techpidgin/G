@@ -7,67 +7,330 @@ import { getMarketPrices } from "@/helpers/get-market-price";
 import { formatCents } from "@/helpers/format-cents";
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
+import { Switch } from "../ui/switch";
+import { tradeSchema } from "@/schemas/trade";
+import * as z from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { placeTrade } from "@/actions/trade";
+import { Loader } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
+import { getPricesLMSR } from "@/helpers/lmsr";
+import { toast } from "sonner";
+
+type TradeFormValues = z.infer<typeof tradeSchema>;
 
 const TradingPanel = ({ selectedMarket }: { selectedMarket: Market }) => {
+  const router = useRouter();
+  const { pYes, pNo } = getPricesLMSR(
+    selectedMarket.yesShares,
+    selectedMarket.noShares,
+    selectedMarket.liquidityParam
+  );
   const [selectedOutcome, setSelectedOutcome] = useState("yes");
   const { yesPrice, noPrice } = getMarketPrices(
     selectedMarket.yesVolume,
     selectedMarket.noVolume
   );
+
+  const setMaxShares = () => {};
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = useForm<TradeFormValues>({
+    resolver: zodResolver(tradeSchema),
+    defaultValues: {
+      side: "buy",
+      marketId: selectedMarket.id,
+      outcome: "yes",
+      amount: Number(pYes),
+      shares: 1,
+      limitPrice: 0.5,
+    },
+  });
+
+  const onSubmit = async (data: TradeFormValues) => {
+    console.log("Trade Submitted:", data);
+    // Submit to server action or API
+    const response = await placeTrade(data);
+    if (response.success) {
+      toast.success("Trade taken successfully");
+    }
+    router.refresh();
+  };
+
+  const outcome = watch("outcome");
+
   return (
-    <Tabs
-      value={selectedOutcome}
-      onValueChange={(value) => setSelectedOutcome(value as "yes" | "no")}
-    >
-      <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="yes" className="text-green-700">
-          Yes {formatCents(yesPrice)}¢
-        </TabsTrigger>
-        <TabsTrigger value="no" className="text-red-700">
-          No {formatCents(noPrice)}¢
-        </TabsTrigger>
-      </TabsList>
+    <form noValidate onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div className="">
+        <Tabs
+          value={watch("side")}
+          onValueChange={(value) => setValue("side", value as "buy" | "sell")}
+        >
+          <TabsList className="">
+            <TabsTrigger value="buy" className="">
+              Buy
+            </TabsTrigger>
+            <TabsTrigger value="sell" className="">
+              Sell
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="buy">
+            <Tabs
+              value={outcome}
+              onValueChange={(value) =>
+                setValue("outcome", value as "yes" | "no")
+              }
+            >
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="yes" className="text-green-700">
+                  Yes {formatCents(pYes)}
+                </TabsTrigger>
+                <TabsTrigger value="no" className="text-red-700">
+                  No {formatCents(pNo)}
+                </TabsTrigger>
+              </TabsList>
 
-      <TabsContent value="yes" className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="yes-amount">Amount ($)</Label>
-          <Input
-            id="yes-amount"
-            type="number"
-            placeholder="0.00"
-            // value={tradeAmount}
-            // onChange={(e) => setTradeAmount(e.target.value)}
-          />
-        </div>
-        <div className="text-sm text-muted-foreground">
-          You'll receive ~{/* {calculatePayout().toFixed(2)}  */}
-          shares
-        </div>
-        <Button className="w-full bg-green-600 hover:bg-green-700">
-          Buy Yes for {formatCents(yesPrice)}
-        </Button>
-      </TabsContent>
+              {/* <TabsContent value="yes" className="space-y-4"> */}
+              <div className="space-y-2">
+                <Label htmlFor="yes-amount">Amount ($)</Label>
+                <Input
+                  id="yes-amount"
+                  type="number"
+                  placeholder="0.00"
+                  step={0.1}
+                  min={0}
+                  {...register("amount", { valueAsNumber: true })}
+                />
+              </div>
 
-      <TabsContent value="no" className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="no-amount">Amount ($)</Label>
-          <Input
-            id="no-amount"
-            type="number"
-            placeholder="0.00"
-            // value={tradeAmount}
-            // onChange={(e) => setTradeAmount(e.target.value)}
-          />
-        </div>
-        <div className="text-sm text-muted-foreground">
-          You'll receive ~{/* {calculatePayout().toFixed(2)} */}
-          shares
-        </div>
-        <Button className="w-full bg-red-600 hover:bg-red-700">
-          Buy No for {formatCents(noPrice)}
-        </Button>
-      </TabsContent>
-    </Tabs>
+              {/* Shares */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm font-medium">Shares</div>
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="text-xs text-slate-400 p-0 h-auto"
+                    onClick={setMaxShares}
+                  >
+                    Max
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  <Input
+                    type="number"
+                    {...register("shares", { valueAsNumber: true })}
+                    className="text-center  text-lg"
+                    placeholder="0"
+                  />
+                  <div className="flex justify-end space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      type="button"
+                      className="text-xs"
+                      onClick={() => setValue("shares", -10)}
+                    >
+                      -10
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      type="button"
+                      className="text-xs"
+                      onClick={() => setValue("shares", 10)}
+                    >
+                      +10
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Set Expiration */}
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Set Expiration</span>
+                <Switch className="data-[state=checked]:bg-blue-600" />
+              </div>
+
+              {/* Totals */}
+              <div className="space-y-2 pt-4 border-t border-slate-700">
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Total</span>
+                  <span className="text-blue-400 font-medium">
+                    {/* ${total.toFixed(2)} */}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400 flex items-center">
+                    To Win
+                    <span className="ml-1 text-green-400">📈</span>
+                  </span>
+                  <span className="text-green-400 font-medium">
+                    {/* ${toWin.toFixed(2)} */}
+                  </span>
+                </div>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                You'll receive ~{/* {calculatePayout().toFixed(2)}  */}
+                shares
+              </div>
+              <Button
+                className={cn("w-full bg-green-600 hover:bg-green-700", {
+                  "bg-red-600 hover:bg-red-700": outcome === "no",
+                })}
+                disabled={isSubmitting}
+              >
+                Buy {outcome.charAt(0).toUpperCase()}
+                {outcome.slice(1)} for {formatCents(yesPrice)}{" "}
+                {isSubmitting && <Loader className="animate-spin ml-2" />}
+              </Button>
+              {/* </TabsContent> */}
+              {/* 
+              <TabsContent value="no" className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="no-amount">Amount ($)</Label>
+                  <Input id="no-amount" type="number" placeholder="0.00" />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm font-medium">Shares</div>
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="text-xs text-slate-400 p-0 h-auto"
+                      onClick={setMaxShares}
+                    >
+                      Max
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    <Input
+                      type="number"
+                      {...register("shares")}
+                      className="text-center  text-lg"
+                      placeholder="0"
+                    />
+                    <div className="flex justify-center space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs"
+                        onClick={() => adjustShares(-10)}
+                      >
+                        -10
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs"
+                        onClick={() => adjustShares(10)}
+                      >
+                        +10
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Set Expiration</span>
+                  <Switch
+                    // checked={setExpiration}
+                    // onCheckedChange={setSetExpiration}
+                    className="data-[state=checked]:bg-blue-600"
+                  />
+                </div>
+
+                <div className="space-y-2 pt-4 border-t border-slate-700">
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Total</span>
+                    <span className="text-blue-400 font-medium"></span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400 flex items-center">
+                      To Win
+                      <span className="ml-1 text-green-400">📈</span>
+                    </span>
+                    <span className="text-green-400 font-medium"></span>
+                  </div>
+                </div>
+
+                <div className="text-sm text-muted-foreground">
+                  You'll receive ~ shares
+                </div>
+                <Button className="w-full bg-red-600 hover:bg-red-700">
+                  Buy No for {formatCents(noPrice)}
+                </Button>
+              </TabsContent> */}
+            </Tabs>
+          </TabsContent>
+          <TabsContent value="sell">
+            <Tabs
+              value={selectedOutcome}
+              onValueChange={(value) =>
+                setSelectedOutcome(value as "yes" | "no")
+              }
+            >
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="yes" className="text-green-700">
+                  Yes {formatCents(yesPrice)}
+                </TabsTrigger>
+                <TabsTrigger value="no" className="text-red-700">
+                  No {formatCents(noPrice)}
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="yes" className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="yes-amount">Amount ($)</Label>
+                  <Input
+                    id="yes-amount"
+                    type="number"
+                    placeholder="0.00"
+                    // value={tradeAmount}
+                    // onChange={(e) => setTradeAmount(e.target.value)}
+                  />
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  You'll receive ~{/* {calculatePayout().toFixed(2)}  */}
+                  shares
+                </div>
+                <Button className="w-full bg-green-600 hover:bg-green-700">
+                  Buy Yes for {formatCents(yesPrice)}
+                </Button>
+              </TabsContent>
+
+              <TabsContent value="no" className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="no-amount">Amount ($)</Label>
+                  <Input
+                    id="no-amount"
+                    type="number"
+                    placeholder="0.00"
+                    // value={tradeAmount}
+                    // onChange={(e) => setTradeAmount(e.target.value)}
+                  />
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  You'll receive ~{/* {calculatePayout().toFixed(2)} */}
+                  shares
+                </div>
+                <Button className="w-full bg-red-600 hover:bg-red-700">
+                  Buy No for {formatCents(noPrice)}
+                </Button>
+              </TabsContent>
+            </Tabs>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </form>
   );
 };
 

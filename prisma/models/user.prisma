@@ -1,8 +1,8 @@
 model User {
-    id       String @id @default(auto()) @map("_id") @db.ObjectId
-    email    String @unique
-    username String @unique
-    wallet   String @unique // wallet address
+    id       String  @id @default(auto()) @map("_id") @db.ObjectId
+    username String?
+    wallet   String? // wallet address
+    privyId  String  @unique
 
     trades     Trade[]
     portfolios Portfolio[]

@@ -46,9 +46,7 @@ export default async function MarketPage({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <CardContent>
-                <MarketLineChart />
-              </CardContent>
+              <MarketLineChart />
             </CardContent>
           </Card>
 
