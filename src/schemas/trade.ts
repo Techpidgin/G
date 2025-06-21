@@ -4,7 +4,7 @@ export const tradeSchema = z.object({
   marketId: z.string(),
   side: z.enum(["buy", "sell"]),
   outcome: z.enum(["yes", "no"]),
-  amount: z.number(),
+  amount: z.string(),
   shares: z
     .number({ invalid_type_error: "Shares must be a number" })
     .min(1, "Minimum 1 share"),

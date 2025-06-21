@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 import privy from "@/lib/privy";
 import * as z from "zod";
 import { tradeSchema } from "@/schemas/trade";
-import { getTradeCost } from "@/helpers/lmsr";
+import { calculateLMSRPrice } from "@/helpers/lmsr";
 
 type TradeFormValues = z.infer<typeof tradeSchema>;
 
@@ -13,7 +13,7 @@ export async function placeTrade(values: TradeFormValues) {
   try {
     const cookieStore = await cookies();
     const authToken = cookieStore.get("privy-token")?.value;
-    console.log(authToken);
+
     if (!authToken) {
       return {
         success: false,
@@ -21,7 +21,7 @@ export async function placeTrade(values: TradeFormValues) {
       };
     }
     const verifiedClaims = await privy.verifyAuthToken(authToken);
-    console.log(verifiedClaims);
+
     let user = await database.user.findUnique({
       where: {
         privyId: verifiedClaims.userId,
@@ -38,13 +38,12 @@ export async function placeTrade(values: TradeFormValues) {
     const result = tradeSchema.safeParse(values);
 
     if (!result.success) {
-      console.log("Error Occured");
       return {
         success: false,
         errors: result.error.flatten().fieldErrors,
       };
     }
-    const { marketId, amount, shares, outcome } = result.data;
+    const { marketId, shares, outcome } = result.data;
 
     const market = await database.market.findUnique({
       where: { id: marketId },
@@ -57,11 +56,14 @@ export async function placeTrade(values: TradeFormValues) {
       };
     }
 
-    const cost = getTradeCost(outcome, shares, {
-      yesShares: market?.yesShares,
-      noShares: market.noShares,
-      liquidityParam: market.liquidityParam,
-    });
+    const { yesPrice, noPrice } = calculateLMSRPrice(
+      market.yesShares,
+      market.noShares,
+      market.liquidityParam
+    );
+
+    const pricePerShare = outcome === "yes" ? yesPrice : noPrice;
+    const cost = pricePerShare * shares;
 
     // Check user balance, etc...
 
@@ -80,11 +82,14 @@ export async function placeTrade(values: TradeFormValues) {
     // // 2. Increment market's yes/no volume
 
     // Update market shares
-    await database.market.update({
+
+    console.log({ outcome });
+    console.log(`Got outcome: ${outcome} and shares of ${shares}`);
+    const marketData = await database.market.update({
       where: { id: market.id },
       data: {
-        yesVolume: outcome === "yes" ? { increment: amount } : undefined,
-        noVolume: outcome === "no" ? { increment: amount } : undefined,
+        yesVolume: outcome === "yes" ? { increment: cost } : undefined,
+        noVolume: outcome === "no" ? { increment: cost } : undefined,
         yesShares: outcome === "yes" ? { increment: shares } : undefined,
         noShares: outcome === "no" ? { increment: shares } : undefined,
       },
@@ -106,7 +111,7 @@ export async function placeTrade(values: TradeFormValues) {
     //     },
     //   });
     // }
-    console.log(trade);
+    console.log({ trade, marketData });
     return { success: true };
   } catch (error) {
     console.error("Error creating trade:", error);

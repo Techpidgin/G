@@ -107,7 +107,6 @@ export async function listNews() {
 }
 
 export async function getNewsBySlug(slug: string) {
-  console.log({ slug });
   return await database.news.findUnique({
     where: { slug },
     include: {

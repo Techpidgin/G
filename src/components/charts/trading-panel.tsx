@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Market } from "@prisma/client";
 import { Input } from "../ui/input";
@@ -16,18 +16,15 @@ import { placeTrade } from "@/actions/trade";
 import { Loader } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { getPricesLMSR } from "@/helpers/lmsr";
+// import { getPricesLMSR } from "@/helpers/lmsr";
 import { toast } from "sonner";
+import { formatCurrency } from "@/helpers/format-currency";
 
 type TradeFormValues = z.infer<typeof tradeSchema>;
 
 const TradingPanel = ({ selectedMarket }: { selectedMarket: Market }) => {
   const router = useRouter();
-  const { pYes, pNo } = getPricesLMSR(
-    selectedMarket.yesShares,
-    selectedMarket.noShares,
-    selectedMarket.liquidityParam
-  );
+
   const [selectedOutcome, setSelectedOutcome] = useState("yes");
   const { yesPrice, noPrice } = getMarketPrices(
     selectedMarket.yesVolume,
@@ -40,6 +37,7 @@ const TradingPanel = ({ selectedMarket }: { selectedMarket: Market }) => {
     register,
     handleSubmit,
     watch,
+    reset,
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<TradeFormValues>({
@@ -48,23 +46,47 @@ const TradingPanel = ({ selectedMarket }: { selectedMarket: Market }) => {
       side: "buy",
       marketId: selectedMarket.id,
       outcome: "yes",
-      amount: Number(pYes),
       shares: 1,
       limitPrice: 0.5,
     },
   });
+  const side = watch("side");
+  const shares = watch("shares");
+  const outcome = watch("outcome");
+
+  const total = useMemo(() => {
+    if (!shares) return 0;
+    if (outcome === "yes") {
+      return yesPrice * shares;
+    }
+    return shares * noPrice;
+  }, [side, shares, outcome]);
+
+  const updateShares = (mode: "add" | "sub", value: number) => {
+    if (mode === "add") {
+      setValue("shares", shares + value);
+    } else if (mode === "sub" && shares - value >= 0) {
+      setValue("shares", shares - value);
+    }
+  };
 
   const onSubmit = async (data: TradeFormValues) => {
-    console.log("Trade Submitted:", data);
     // Submit to server action or API
     const response = await placeTrade(data);
     if (response.success) {
       toast.success("Trade taken successfully");
+      reset();
     }
     router.refresh();
   };
 
-  const outcome = watch("outcome");
+  useEffect(() => {
+    if (outcome === "yes") {
+      setValue("amount", formatCents(yesPrice));
+    } else {
+      setValue("amount", formatCents(noPrice));
+    }
+  }, [outcome, side]);
 
   return (
     <form noValidate onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -90,10 +112,10 @@ const TradingPanel = ({ selectedMarket }: { selectedMarket: Market }) => {
             >
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="yes" className="text-green-700">
-                  Yes {formatCents(pYes)}
+                  Yes {formatCents(yesPrice)}
                 </TabsTrigger>
                 <TabsTrigger value="no" className="text-red-700">
-                  No {formatCents(pNo)}
+                  No {formatCents(noPrice)}
                 </TabsTrigger>
               </TabsList>
 
@@ -102,11 +124,13 @@ const TradingPanel = ({ selectedMarket }: { selectedMarket: Market }) => {
                 <Label htmlFor="yes-amount">Amount ($)</Label>
                 <Input
                   id="yes-amount"
-                  type="number"
-                  placeholder="0.00"
-                  step={0.1}
-                  min={0}
-                  {...register("amount", { valueAsNumber: true })}
+                  type="text"
+                  readOnly={true}
+                  aria-readonly={true}
+                  inputMode="decimal"
+                  autoComplete="off"
+                  placeholder="0¢"
+                  {...register("amount")}
                 />
               </div>
 
@@ -136,7 +160,7 @@ const TradingPanel = ({ selectedMarket }: { selectedMarket: Market }) => {
                       size="sm"
                       type="button"
                       className="text-xs"
-                      onClick={() => setValue("shares", -10)}
+                      onClick={() => updateShares("sub", 10)}
                     >
                       -10
                     </Button>
@@ -145,7 +169,7 @@ const TradingPanel = ({ selectedMarket }: { selectedMarket: Market }) => {
                       size="sm"
                       type="button"
                       className="text-xs"
-                      onClick={() => setValue("shares", 10)}
+                      onClick={() => updateShares("add", 10)}
                     >
                       +10
                     </Button>
@@ -164,23 +188,24 @@ const TradingPanel = ({ selectedMarket }: { selectedMarket: Market }) => {
                 <div className="flex justify-between">
                   <span className="text-slate-400">Total</span>
                   <span className="text-blue-400 font-medium">
-                    {/* ${total.toFixed(2)} */}
+                    {formatCurrency(total)}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400 flex items-center">
                     To Win
-                    <span className="ml-1 text-green-400">📈</span>
                   </span>
                   <span className="text-green-400 font-medium">
-                    {/* ${toWin.toFixed(2)} */}
+                    {formatCurrency(shares ? shares : 0)}
                   </span>
                 </div>
               </div>
-              <div className="text-sm text-muted-foreground">
-                You'll receive ~{/* {calculatePayout().toFixed(2)}  */}
-                shares
-              </div>
+              {/* <div className="text-sm text-muted-foreground flex justify-between items-center">
+                You'll receive{" "}
+                <span className="text-green-600 text-lg">
+                  {formatCurrency(shares ? shares : 0)}
+                </span>
+              </div> */}
               <Button
                 className={cn("w-full bg-green-600 hover:bg-green-700", {
                   "bg-red-600 hover:bg-red-700": outcome === "no",
@@ -188,7 +213,7 @@ const TradingPanel = ({ selectedMarket }: { selectedMarket: Market }) => {
                 disabled={isSubmitting}
               >
                 Buy {outcome.charAt(0).toUpperCase()}
-                {outcome.slice(1)} for {formatCents(yesPrice)}{" "}
+                {outcome.slice(1)}
                 {isSubmitting && <Loader className="animate-spin ml-2" />}
               </Button>
               {/* </TabsContent> */}
