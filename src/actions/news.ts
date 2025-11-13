@@ -123,3 +123,44 @@ export async function getNewsBySlug(slug: string) {
     },
   });
 }
+
+export async function getMarketChartFromTrades(marketId: string) {
+  const trades = await database.trade.findMany({
+    where: { marketId },
+    orderBy: { timestamp: "asc" },
+  });
+
+  // Group trades by day
+  const priceSnapshots: Record<
+    string,
+    { yesVolume: number; noVolume: number }
+  > = {};
+
+  for (const trade of trades) {
+    const date = trade.timestamp.toISOString().slice(0, 10); // e.g., "2025-06-21"
+    if (!priceSnapshots[date]) {
+      priceSnapshots[date] = { yesVolume: 0, noVolume: 0 };
+    }
+
+    if (trade.type === "BUY") {
+      priceSnapshots[date].yesVolume += trade.amount;
+    } else {
+      priceSnapshots[date].noVolume += trade.amount;
+    }
+  }
+
+  // Convert to chart data
+  const chartData = Object.entries(priceSnapshots).map(([time, volumes]) => {
+    const total = volumes.yesVolume + volumes.noVolume;
+    const yes = total > 0 ? (volumes.yesVolume / total) * 100 : 50;
+    const no = total > 0 ? (volumes.noVolume / total) * 100 : 50;
+
+    return {
+      time,
+      Yes: Math.round(yes),
+      No: Math.round(no),
+    };
+  });
+
+  return chartData;
+}
